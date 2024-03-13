@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"dashboard_id\": \"b05cf7ef-3094-4192-9471-80e6b403b2d7\",\r\n    \"query\": \"orgId=1&var-group=public\",\r\n    \"from\": 1710172800000,\r\n    \"to\": 1710259199000\r\n}",
+					"raw": "{\r\n    \"name\": \"test-snapshot\",\r\n    \"dashboard_id\": \"b05cf7ef-3094-4192-9471-\",\r\n    \"query\": \"orgId=1&var-group=public\",\r\n    \"from\": 1710172800000,\r\n    \"to\": 1710259199000\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -39,7 +39,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"grafana_url\": \"http://grafana.example.com\",\r\n    \"username\": \"user\",\r\n    \"password\": \"password\",\r\n    \"dashboard_id\": \"b05cf7ef-3094-4192-9471-80e6b403b2d7\",\r\n    \"query\": \"orgId=1&var-group=public\",\r\n    \"from\": 1710172800000,\r\n    \"to\": 1710259199000\r\n}",
+					"raw": "{\r\n    \"grafana_url\": \"https://grafana.example.com\",\r\n    \"username\": \"user\",\r\n    \"password\": \"password\",\r\n    \"name\": \"test-snapshot\",\r\n    \"dashboard_id\": \"b05cf7ef-3094-4192-9471-80e6b403b2d7\",\r\n    \"query\": \"orgId=1&var-group=public\",\r\n    \"from\": 1710172800000,\r\n    \"to\": 1710259199000\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
