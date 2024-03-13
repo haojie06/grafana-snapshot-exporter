@@ -10,7 +10,7 @@ docker run -it -p 8080:8080 \
     -e HEADLESS=true \
     -e CHROME_LOG=false \
     -e API_KEY=hello \
-    -e ADDR=127.0.0.1:8080 \
+    -e ADDR=0.0.0.0:8080 \
     --name grafana-snapshot-exporter \
     --rm \
     ghcr.io/haojie06/grafana-snapshot-exporter:latest
