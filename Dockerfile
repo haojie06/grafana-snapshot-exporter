@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -o grafana-snapshot-exporter \
-    main.go
+    .
 
 FROM chromedp/headless-shell:latest
 WORKDIR /app
