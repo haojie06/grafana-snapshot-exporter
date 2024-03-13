@@ -40,7 +40,7 @@ func TestLoginAndCreateSnapshot(t *testing.T) {
 	} else {
 		t.Logf("loginGrafana() ok")
 	}
-	snapshotKey, err := createSnapshot(chromeContext, "b05cf7ef-3094-4192-9471-80e6b403b2d7", "orgId=1&var-group=public", 1710172800000, 1710259199000)
+	snapshotKey, err := createSnapshot(chromeContext, DefaultGrafanaURL, "b05cf7ef-3094-4192-9471-80e6b403b2d7", "orgId=1&var-group=public", 1710172800000, 1710259199000)
 	if err != nil {
 		t.Errorf("createSnapshot() error = %s", err)
 	} else {
@@ -52,7 +52,7 @@ func TestSnapshotWithoutLogin(t *testing.T) {
 	chromeContext, cancel := chromedp.NewContext(DefaultAllocContext)
 	defer cancel()
 
-	snapshotKey, err := createSnapshot(chromeContext, "b05cf7ef-3094-4192-9471-80e6b403b2d7", "orgId=1&var-group=public", 1710172800000, 1710259199000)
+	snapshotKey, err := createSnapshot(chromeContext, DefaultGrafanaURL, "b05cf7ef-3094-4192-9471-80e6b403b2d7", "orgId=1&var-group=public", 1710172800000, 1710259199000)
 	if err != nil {
 		t.Errorf("createSnapshot() error = %s", err)
 	} else {
