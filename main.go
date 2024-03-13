@@ -12,10 +12,14 @@ import (
 
 	"github.com/chromedp/chromedp"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 var (
+	logger *zap.Logger
+
 	Addr   string
 	APIKey string
 
@@ -48,8 +52,14 @@ func init() {
 	DefaultGrafanaUserName = os.Getenv("GRAFANA_USERNAME")
 	DefaultGrafanaPassword = os.Getenv("GRAFANA_PASSWORD")
 	if ChromeLog {
-		DefaultChromeContextOptions = append(DefaultChromeContextOptions, chromedp.WithLogf(log.Printf))
+		DefaultChromeContextOptions = append(DefaultChromeContextOptions, chromedp.WithLogf(zap.S().Debugf))
 	}
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		log.Fatalf("zap.NewProduction err: %s", err)
+	}
+	zap.ReplaceGlobals(logger)
+	gin.DefaultWriter = zap.NewStdLog(logger).Writer()
 	// a new browser context
 	DefaultAllocContext, DefaultAllocContextCancel = createAllocContext(Headless)
 	DefaultChromeContext, DefaultChromeContextCancel = chromedp.NewContext(
@@ -65,31 +75,31 @@ func main() {
 	// allocate a new browser, if user/pass is set, login to get grafana session
 	// todo: reLogin if session expired
 	if DefaultGrafanaPassword != "" && DefaultGrafanaUserName != "" {
-		log.Printf("login to grafana\n")
+		zap.S().Infof("login to grafana: %s", DefaultGrafanaURL)
 		loginContext, cancel := context.WithTimeout(DefaultChromeContext, 30*time.Second)
 		defer cancel()
 		if err := chromedp.Run(loginContext,
 			loginGrafanaTasks(DefaultGrafanaURL, DefaultGrafanaUserName, DefaultGrafanaPassword),
 		); err != nil {
-			log.Fatalf("loginGrafana err: %s\n", err)
+			zap.S().Fatalf("login to grafana err: %s", err)
 		}
-		log.Println("login success")
+		zap.S().Infof("login success")
 	} else {
-		log.Printf("no grafana username/password set, skip login\n")
+		zap.S().Infof("no grafana username/password set, skip login")
 		if err := chromedp.Run(DefaultChromeContext, chromedp.Tasks{
 			chromedp.Navigate("about:blank"),
 		}); err != nil {
-			log.Fatalf("chromeContext init err: %s\n", err)
+			zap.S().Fatalf("chromeContext init err: %s", err)
 		}
-		log.Println("chromeContext init success")
+		zap.S().Infof("chromeContext init success")
 	}
 
 	r := gin.Default()
 	r.POST("/snapshot", APIKeyCheck(APIKey), CreateSnapshotHandler)
 	r.POST("/login_and_snapshot", APIKeyCheck(APIKey), LoginAndCreateSnapshotHandler) // login and create snapshot in a new chrome process, does not share session with default chrome context
-	log.Printf("server run on %s headless: %t\n", Addr, Headless)
+	zap.S().Infof("server run on %s headless: %t", Addr, Headless)
 	if err := r.Run(Addr); err != nil {
-		log.Fatalf("server run error: %s", err)
+		zap.S().Fatalf("server run error: %s", err)
 	}
 }
 
@@ -100,6 +110,14 @@ func APIKeyCheck(key string) gin.HandlerFunc {
 			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
 			return
 		}
+		c.Next()
+	}
+}
+
+func TraceIdMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceId := uuid.New().String()
+		c.Set("traceId", traceId)
 		c.Next()
 	}
 }
@@ -186,7 +204,7 @@ func loginGrafanaTasks(grfanaURL, username, password string) chromedp.Tasks {
 			}
 			locationBase := path.Base(currentLocation)
 			if locationBase != "login" {
-				log.Printf("already login, skip login\n")
+				zap.S().Infof("already login, skip login")
 				return nil
 			}
 			return chromedp.Run(ctx, chromedp.WaitVisible(`input[name='user']`),
