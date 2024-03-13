@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -35,7 +36,7 @@ var (
 
 func init() {
 	err := godotenv.Load()
-	if err != nil {
+	if err != nil && errors.Is(err, os.ErrNotExist) {
 		log.Fatalf("Error loading .env file: %s", err)
 	}
 	Addr = os.Getenv("ADDR")
