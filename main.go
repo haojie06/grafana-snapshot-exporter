@@ -139,7 +139,7 @@ func CreateSnapshotHandler(c *gin.Context) {
 	defer cancel()
 	snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
 	defer cancel()
-	snapshotKey, err := createSnapshot(snapshotContext, req.DashboardId, req.Query, req.From, req.To)
+	snapshotKey, err := createSnapshot(snapshotContext, DefaultGrafanaURL, req.DashboardId, req.Query, req.From, req.To)
 	if err != nil {
 		if errors.Is(err, ErrDashboardNeedLogin) && DefaultGrafanaURL != "" && DefaultGrafanaUserName != "" && DefaultGrafanaPassword != "" {
 			// relogin and retry
@@ -153,7 +153,7 @@ func CreateSnapshotHandler(c *gin.Context) {
 			}
 			snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
 			defer cancel()
-			snapshotKey, err = createSnapshot(snapshotContext, req.DashboardId, req.Query, req.From, req.To)
+			snapshotKey, err = createSnapshot(snapshotContext, DefaultGrafanaURL, req.DashboardId, req.Query, req.From, req.To)
 			if err != nil {
 				err = fmt.Errorf("retry create snapshot error: %w", err)
 				c.JSON(500, gin.H{"error": err.Error()})
@@ -194,7 +194,7 @@ func LoginAndCreateSnapshotHandler(c *gin.Context) {
 
 	snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
 	defer cancel()
-	snapshotKey, err := createSnapshot(snapshotContext, req.DashboardId, req.Query, req.From, req.To)
+	snapshotKey, err := createSnapshot(snapshotContext, req.GrafanaURL, req.DashboardId, req.Query, req.From, req.To)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -204,11 +204,11 @@ func LoginAndCreateSnapshotHandler(c *gin.Context) {
 	})
 }
 
-func createSnapshot(ctx context.Context, dashboardId, query string, from, to int) (string, error) {
+func createSnapshot(ctx context.Context, grafanaURL, dashboardId, query string, from, to int) (string, error) {
 	zap.S().Debugf("start creating snapshot: dashboardId: %s, query: %s, from: %d, to: %d", dashboardId, query, from, to)
 	var snapshotURLStr, snapshotKey string
 	if err := chromedp.Run(ctx,
-		createSnapshotTasks(dashboardId, query, from, to),
+		createSnapshotTasks(grafanaURL, dashboardId, query, from, to),
 		chromedp.Value(`#snapshot-url-input`, &snapshotURLStr),
 	); err != nil {
 		return "", err
@@ -249,9 +249,9 @@ func loginGrafanaTasks(grfanaURL, username, password string) chromedp.Tasks {
 	}
 }
 
-func createSnapshotTasks(dashboardId, query string, from, to int) chromedp.Tasks {
+func createSnapshotTasks(grafanaURL, dashboardId, query string, from, to int) chromedp.Tasks {
 	return chromedp.Tasks{
-		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", DefaultGrafanaURL, dashboardId, from, to, query)),
+		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", grafanaURL, dashboardId, from, to, query)),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			// check if need login
 			var currentLocation string
