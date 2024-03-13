@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/kb"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -137,9 +138,9 @@ func CreateSnapshotHandler(c *gin.Context) {
 	}
 	chromeContext, cancel := chromedp.NewContext(DefaultChromeContext)
 	defer cancel()
-	snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
+	snapshotContext, cancel := context.WithTimeout(chromeContext, 45*time.Second)
 	defer cancel()
-	snapshotKey, err := createSnapshot(snapshotContext, DefaultGrafanaURL, req.DashboardId, req.Query, req.From, req.To)
+	snapshotKey, err := createSnapshot(snapshotContext, req.Name, DefaultGrafanaURL, req.DashboardId, req.Query, req.From, req.To)
 	if err != nil {
 		if errors.Is(err, ErrDashboardNeedLogin) && DefaultGrafanaURL != "" && DefaultGrafanaUserName != "" && DefaultGrafanaPassword != "" {
 			// relogin and retry
@@ -151,9 +152,9 @@ func CreateSnapshotHandler(c *gin.Context) {
 				err = fmt.Errorf("relogin error: %w", err)
 				c.JSON(500, gin.H{"error": err.Error()})
 			}
-			snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
+			snapshotContext, cancel := context.WithTimeout(chromeContext, 45*time.Second)
 			defer cancel()
-			snapshotKey, err = createSnapshot(snapshotContext, DefaultGrafanaURL, req.DashboardId, req.Query, req.From, req.To)
+			snapshotKey, err = createSnapshot(snapshotContext, req.Name, DefaultGrafanaURL, req.DashboardId, req.Query, req.From, req.To)
 			if err != nil {
 				err = fmt.Errorf("retry create snapshot error: %w", err)
 				c.JSON(500, gin.H{"error": err.Error()})
@@ -192,9 +193,9 @@ func LoginAndCreateSnapshotHandler(c *gin.Context) {
 	}
 	zap.S().Infof("login success")
 
-	snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
+	snapshotContext, cancel := context.WithTimeout(chromeContext, 45*time.Second)
 	defer cancel()
-	snapshotKey, err := createSnapshot(snapshotContext, req.GrafanaURL, req.DashboardId, req.Query, req.From, req.To)
+	snapshotKey, err := createSnapshot(snapshotContext, req.Name, req.GrafanaURL, req.DashboardId, req.Query, req.From, req.To)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -204,11 +205,11 @@ func LoginAndCreateSnapshotHandler(c *gin.Context) {
 	})
 }
 
-func createSnapshot(ctx context.Context, grafanaURL, dashboardId, query string, from, to int) (string, error) {
+func createSnapshot(ctx context.Context, snapshotName, grafanaURL, dashboardId, query string, from, to int) (string, error) {
 	zap.S().Debugf("start creating snapshot: dashboardId: %s, query: %s, from: %d, to: %d", dashboardId, query, from, to)
 	var snapshotURLStr, snapshotKey string
 	if err := chromedp.Run(ctx,
-		createSnapshotTasks(grafanaURL, dashboardId, query, from, to),
+		createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query, from, to),
 		chromedp.Value(`#snapshot-url-input`, &snapshotURLStr),
 	); err != nil {
 		return "", err
@@ -249,7 +250,11 @@ func loginGrafanaTasks(grfanaURL, username, password string) chromedp.Tasks {
 	}
 }
 
-func createSnapshotTasks(grafanaURL, dashboardId, query string, from, to int) chromedp.Tasks {
+func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, from, to int) chromedp.Tasks {
+	var multiBackspace string
+	for i := 0; i < 20; i++ {
+		multiBackspace += kb.Backspace
+	}
 	return chromedp.Tasks{
 		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", grafanaURL, dashboardId, from, to, query)),
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -271,6 +276,12 @@ func createSnapshotTasks(grafanaURL, dashboardId, query string, from, to int) ch
 		chromedp.WaitNotPresent(`div[aria-label='Panel loading bar']`), // wait for all panel loaded
 		chromedp.Click(`button[aria-label='Share dashboard']`),
 		chromedp.Click(`button[aria-label='Tab Snapshot']`),
+		chromedp.WaitVisible(`#snapshot-name-input`),
+		chromedp.Click(`#snapshot-name-input`, chromedp.ByID),
+		chromedp.KeyEvent(kb.End),
+		chromedp.KeyEvent(multiBackspace),
+		chromedp.KeyEvent(kb.Backspace),
+		chromedp.SendKeys(`#snapshot-name-input`, snapshotName),
 		chromedp.Click(`.css-1i88p6p`), // click on dropdown
 		chromedp.WaitVisible(`#react-select-2-listbox`),
 		chromedp.Click(`#react-select-2-option-1`), // choose 1 hour expire

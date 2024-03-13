@@ -25,6 +25,7 @@ curl --location 'https://grafana-snapshot-exporter.sailing.im/snapshot' \
 --header 'Content-Type: application/json' \
 --header 'X-API-Key: hello' \
 --data '{
+    "name": "test-snaphot", // your snapshot name
     "dashboard_id": "b05cf7ef-xxx-4192-9471-80e6b403b2d7", // your dashboard uid
     "query": "orgId=1&var-name=test_name", // you can pass variables in query
     "from": 1710172800000, // timerange from
@@ -36,6 +37,7 @@ curl --location 'https://grafana-snapshot-exporter.sailing.im/login_and_snapshot
 --header 'Content-Type: application/json' \
 --header 'X-API-Key: hello' \
 --data '{
+    "name": "test-snaphot", 
     "grafana_url": "https://play.grafana.org/d/000000012/grafana-play-home?orgId=1",
     "username": "admin",
     "password": "password",
