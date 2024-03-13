@@ -18,8 +18,6 @@ import (
 )
 
 var (
-	logger *zap.Logger
-
 	Addr   string
 	APIKey string
 
@@ -128,7 +126,7 @@ func CreateSnapshotHandler(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	chromeContext, cancel := chromedp.NewContext(DefaultChromeContext, DefaultChromeContextOptions...)
+	chromeContext, cancel := chromedp.NewContext(DefaultChromeContext)
 	defer cancel()
 	snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
 	defer cancel()
