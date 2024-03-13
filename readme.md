@@ -15,3 +15,32 @@ docker run -it -p 8080:8080 \
     --rm \
     ghcr.io/haojie06/grafana-snapshot-exporter:latest
 ```
+
+You can use the demo exporter endpoint `https://grafana-snapshot-exporter.sailing.im` or deploy your own exporter.
+
+```bash
+# Create snapshot (using your default grafana url and username/password)
+curl --location 'https://grafana-snapshot-exporter.sailing.im/snapshot' \
+--header 'Content-Type: application/json' \
+--header 'X-API-Key: hello' \
+--data '{
+    "dashboard_id": "b05cf7ef-3094-4192-9471-80e6b403b2d7",
+    "query": "orgId=1&var-group=public",
+    "from": 1710172800000,
+    "to": 1710259199000
+}'
+
+# Login and create snapshot in an isolated browser (using your custom grafana url and username/password)
+curl --location 'https://grafana-snapshot-exporter.sailing.im/login_and_snapshot' \
+--header 'Content-Type: application/json' \
+--header 'X-API-Key: hello' \
+--data '{
+    "grafana_url": "https://grafana.example.com",
+    "username": "admin",
+    "password": "password",
+    "dashboard_id": "b05cf7ef-xxxx-4192-9471-80e6b403b2d7",
+    "query": "orgId=1&var-name=test_name",
+    "from": 1710172800000,
+    "to": 1710259199000
+}'
+```
