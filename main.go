@@ -126,6 +126,10 @@ func TraceIdMiddleware() gin.HandlerFunc {
 }
 
 func CreateSnapshotHandler(c *gin.Context) {
+	if DefaultGrafanaURL == "" || DefaultGrafanaUserName == "" || DefaultGrafanaPassword == "" {
+		c.JSON(500, gin.H{"error": "default grafanaURL/username/password not set"})
+		return
+	}
 	var req CreateSnapshotRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
