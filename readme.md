@@ -3,6 +3,7 @@
 ## HowTo
 
 ```bash
+# this image already contains headless chrome, you can use it directly
 docker run -it -p 8080:8080 \
     -e GRAFANA_URL=http://grafana:3000 \
     -e GRAFANA_USERNAME=admin \
