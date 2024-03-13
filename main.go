@@ -174,6 +174,7 @@ func LoginAndCreateSnapshotHandler(c *gin.Context) {
 }
 
 func createSnapshot(ctx context.Context, dashboardId, query string, from, to int) (string, error) {
+	zap.S().Debugf("start create snapshot: dashboardId: %s, query: %s, from: %d, to: %d", dashboardId, query, from, to)
 	var snapshotURLStr, snapshotKey string
 	if err := chromedp.Run(ctx,
 		createSnapshotTasks(dashboardId, query, from, to),
@@ -186,6 +187,7 @@ func createSnapshot(ctx context.Context, dashboardId, query string, from, to int
 		return "", err
 	}
 	snapshotKey = path.Base(snapshotURL.Path)
+	zap.S().Infof("create snapshot success: %s", snapshotKey)
 	return snapshotKey, nil
 }
 
