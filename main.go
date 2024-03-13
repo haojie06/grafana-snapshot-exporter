@@ -281,10 +281,6 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 		chromedp.KeyEvent(kb.End),
 		chromedp.KeyEvent(multiBackspace),
 		chromedp.KeyEvent(kb.Backspace),
-		chromedp.Click(`#timeout-input`, chromedp.ByID),
-		chromedp.KeyEvent(kb.Backspace),
-		chromedp.KeyEvent(kb.ArrowLeft),
-		// chromedp.SendKeys(`#timeout-input`, "1"), // delete the default value
 		chromedp.SendKeys(`#snapshot-name-input`, snapshotName),
 		chromedp.Click(`.css-1i88p6p`), // click on dropdown
 		chromedp.WaitVisible(`#react-select-2-listbox`),
