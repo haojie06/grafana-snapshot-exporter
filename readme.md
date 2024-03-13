@@ -24,8 +24,8 @@ curl --location 'https://grafana-snapshot-exporter.sailing.im/snapshot' \
 --header 'Content-Type: application/json' \
 --header 'X-API-Key: hello' \
 --data '{
-    "dashboard_id": "b05cf7ef-3094-4192-9471-80e6b403b2d7",
-    "query": "orgId=1&var-group=public",
+    "dashboard_id": "b05cf7ef-xxx-4192-9471-80e6b403b2d7",
+    "query": "orgId=1&var-name=test_name",
     "from": 1710172800000,
     "to": 1710259199000
 }'
