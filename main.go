@@ -64,6 +64,11 @@ func init() {
 		DefaultAllocContext,
 		DefaultChromeContextOptions...,
 	)
+	if err := chromedp.Run(DefaultChromeContext, chromedp.Tasks{
+		chromedp.Navigate("about:blank"),
+	}); err != nil {
+		zap.S().Fatalf("chromeContext init err: %s", err)
+	}
 }
 
 func main() {
@@ -153,12 +158,14 @@ func LoginAndCreateSnapshotHandler(c *gin.Context) {
 	defer cancel()
 	loginContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
 	defer cancel()
+	zap.S().Infof("login to grafana: %s", req.GrafanaURL)
 	if err := chromedp.Run(loginContext,
 		loginGrafanaTasks(req.GrafanaURL, req.Username, req.Password),
 	); err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	zap.S().Infof("login success")
 	snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
 	defer cancel()
 	snapshotKey, err := createSnapshot(snapshotContext, req.DashboardId, req.Query, req.From, req.To)
@@ -172,7 +179,7 @@ func LoginAndCreateSnapshotHandler(c *gin.Context) {
 }
 
 func createSnapshot(ctx context.Context, dashboardId, query string, from, to int) (string, error) {
-	zap.S().Debugf("start create snapshot: dashboardId: %s, query: %s, from: %d, to: %d", dashboardId, query, from, to)
+	zap.S().Debugf("start creating snapshot: dashboardId: %s, query: %s, from: %d, to: %d", dashboardId, query, from, to)
 	var snapshotURLStr, snapshotKey string
 	if err := chromedp.Run(ctx,
 		createSnapshotTasks(dashboardId, query, from, to),
