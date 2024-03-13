@@ -65,6 +65,7 @@ func main() {
 	// allocate a new browser, if user/pass is set, login to get grafana session
 	// todo: reLogin if session expired
 	if DefaultGrafanaPassword != "" && DefaultGrafanaUserName != "" {
+		log.Printf("login to grafana\n")
 		loginContext, cancel := context.WithTimeout(DefaultChromeContext, 30*time.Second)
 		defer cancel()
 		if err := chromedp.Run(loginContext,
@@ -72,12 +73,15 @@ func main() {
 		); err != nil {
 			log.Fatalf("loginGrafana err: %s\n", err)
 		}
+		log.Println("login success")
 	} else {
+		log.Printf("no grafana username/password set, skip login\n")
 		if err := chromedp.Run(DefaultChromeContext, chromedp.Tasks{
 			chromedp.Navigate("about:blank"),
 		}); err != nil {
 			log.Fatalf("chromeContext init err: %s\n", err)
 		}
+		log.Println("chromeContext init success")
 	}
 
 	r := gin.Default()
@@ -215,6 +219,9 @@ func createAllocContext(headless bool) (context.Context, context.CancelFunc) {
 		chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.WindowSize(1920, 1080),
 		chromedp.Flag("headless", headless),
+		chromedp.Flag("disable-gpu", headless),
+		chromedp.Flag("no-sandbox", true),
+		chromedp.Flag("disable-dev-shm-usage", true),
 	)
 	return chromedp.NewExecAllocator(context.Background(), opts...)
 }
