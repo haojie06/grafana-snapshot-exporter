@@ -87,7 +87,7 @@ func main() {
 	r := gin.Default()
 	r.POST("/snapshot", APIKeyCheck(APIKey), CreateSnapshotHandler)
 	r.POST("/login_and_snapshot", APIKeyCheck(APIKey), LoginAndCreateSnapshotHandler) // login and create snapshot in a new chrome process, does not share session with default chrome context
-
+	log.Printf("server run on %s headless: %t\n", Addr, Headless)
 	if err := r.Run(Addr); err != nil {
 		log.Fatalf("server run error: %s", err)
 	}
