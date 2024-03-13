@@ -77,7 +77,7 @@ func main() {
 
 	// allocate a new browser, if user/pass is set, login to get grafana session
 	// todo: reLogin if session expired
-	if DefaultGrafanaPassword != "" && DefaultGrafanaUserName != "" {
+	if DefaultGrafanaURL != "" && DefaultGrafanaPassword != "" && DefaultGrafanaUserName != "" {
 		zap.S().Infof("login to grafana: %s", DefaultGrafanaURL)
 		loginContext, cancel := context.WithTimeout(DefaultChromeContext, 30*time.Second)
 		defer cancel()
@@ -141,8 +141,28 @@ func CreateSnapshotHandler(c *gin.Context) {
 	defer cancel()
 	snapshotKey, err := createSnapshot(snapshotContext, req.DashboardId, req.Query, req.From, req.To)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
+		if errors.Is(err, ErrDashboardNeedLogin) && DefaultGrafanaURL != "" && DefaultGrafanaUserName != "" && DefaultGrafanaPassword != "" {
+			// relogin and retry
+			zap.S().Infof("relogin and retry")
+			loginContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
+			defer cancel()
+			if err := chromedp.Run(loginContext,
+				loginGrafanaTasks(DefaultGrafanaURL, DefaultGrafanaUserName, DefaultGrafanaPassword)); err != nil {
+				err = fmt.Errorf("relogin error: %w", err)
+				c.JSON(500, gin.H{"error": err.Error()})
+			}
+			snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
+			defer cancel()
+			snapshotKey, err = createSnapshot(snapshotContext, req.DashboardId, req.Query, req.From, req.To)
+			if err != nil {
+				err = fmt.Errorf("retry create snapshot error: %w", err)
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+		} else {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
 	}
 	c.JSON(200, gin.H{
 		"url": fmt.Sprintf("%s/dashboard/snapshot/%s", DefaultGrafanaURL, snapshotKey),
@@ -162,6 +182,7 @@ func LoginAndCreateSnapshotHandler(c *gin.Context) {
 	defer cancel()
 	loginContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
 	defer cancel()
+
 	zap.S().Infof("login to grafana: %s", req.GrafanaURL)
 	if err := chromedp.Run(loginContext,
 		loginGrafanaTasks(req.GrafanaURL, req.Username, req.Password),
@@ -170,6 +191,7 @@ func LoginAndCreateSnapshotHandler(c *gin.Context) {
 		return
 	}
 	zap.S().Infof("login success")
+
 	snapshotContext, cancel := context.WithTimeout(chromeContext, 30*time.Second)
 	defer cancel()
 	snapshotKey, err := createSnapshot(snapshotContext, req.DashboardId, req.Query, req.From, req.To)
@@ -230,7 +252,21 @@ func loginGrafanaTasks(grfanaURL, username, password string) chromedp.Tasks {
 func createSnapshotTasks(dashboardId, query string, from, to int) chromedp.Tasks {
 	return chromedp.Tasks{
 		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", DefaultGrafanaURL, dashboardId, from, to, query)),
-		chromedp.WaitVisible(`.page-dashboard`),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			// check if need login
+			var currentLocation string
+			if err := chromedp.Run(ctx,
+				chromedp.WaitReady(`body`),
+				chromedp.Location(&currentLocation),
+			); err != nil {
+				return err
+			}
+			locationBase := path.Base(currentLocation)
+			if locationBase == "login" {
+				return ErrDashboardNeedLogin
+			}
+			return nil
+		}),
 		chromedp.WaitVisible(`div[aria-label='Panel loading bar']`),    // wait for all panel loaded (for debug
 		chromedp.WaitNotPresent(`div[aria-label='Panel loading bar']`), // wait for all panel loaded
 		chromedp.Click(`button[aria-label='Share dashboard']`),
