@@ -1,5 +1,7 @@
 # Create Grafana snapshot via headless chrome
 
+If you have any questions or advice, please feel free to submit an issue.
+
 ## HowTo
 
 ```bash
