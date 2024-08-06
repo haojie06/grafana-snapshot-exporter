@@ -284,7 +284,7 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 			var currentLocation string
 			if err := chromedp.Run(ctx,
 				logAction("wait for body loaded"),
-				chromedp.WaitVisible(`body`),
+				chromedp.WaitReady(`body`),
 				logAction("get current location"),
 				chromedp.Location(&currentLocation),
 			); err != nil {
