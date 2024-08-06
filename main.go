@@ -267,20 +267,6 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", grafanaURL, dashboardId, from, to, query)),
 		logAction("wait for dashboard loaded"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			var screenshot []byte
-			if err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-				if err := chromedp.Run(ctx,
-					chromedp.Sleep(5*time.Second),
-					chromedp.FullScreenshot(&screenshot, 100)); err != nil {
-					return err
-				}
-				if err := os.WriteFile("screenshot.png", screenshot, 0644); err != nil {
-					zap.S().Errorf("write screenshot")
-				}
-				return nil
-			})); err != nil {
-				return err
-			}
 			// check if need login
 			var currentLocation string
 			if err := chromedp.Run(ctx,
