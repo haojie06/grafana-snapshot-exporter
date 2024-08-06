@@ -269,7 +269,7 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 			// check if need login
 			var currentLocation string
 			if err := chromedp.Run(ctx,
-				chromedp.WaitReady(`body`),
+				chromedp.WaitVisible(`body`),
 				chromedp.Location(&currentLocation),
 			); err != nil {
 				return err
@@ -280,8 +280,9 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 			}
 			return nil
 		}),
-		chromedp.WaitVisible(`div[aria-label='Panel loading bar']`), // wait for all panel loaded (for debug
+		logAction("dashboard loaded"),
 		logAction("wait for panel loaded"),
+		chromedp.WaitVisible(`div[aria-label='Panel loading bar']`),    // wait for all panel loaded (for debug
 		chromedp.WaitNotPresent(`div[aria-label='Panel loading bar']`), // wait for all panel loaded
 		logAction("all panel loaded"),
 		chromedp.Click(`button[aria-label='Share dashboard']`),
