@@ -280,8 +280,7 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 			}
 			return nil
 		}),
-		logAction("dashboard loaded"),
-		logAction("wait for panel loaded"),
+		logAction("dashboard loaded, wait for panel loaded"),
 		chromedp.WaitVisible(`div[aria-label='Panel loading bar']`),    // wait for all panel loaded (for debug
 		chromedp.WaitNotPresent(`div[aria-label='Panel loading bar']`), // wait for all panel loaded
 		logAction("all panel loaded"),
