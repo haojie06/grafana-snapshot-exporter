@@ -265,20 +265,18 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 	return chromedp.Tasks{
 		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", grafanaURL, dashboardId, from, to, query)),
 		logAction("wait for dashboard loaded"),
+		logAction("wait for dashboard loaded"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var screenshot []byte
-			var htmlContent string
 			if err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 				if err := chromedp.Run(ctx,
 					chromedp.Sleep(5*time.Second),
-					chromedp.OuterHTML("html", &htmlContent),
 					chromedp.FullScreenshot(&screenshot, 100)); err != nil {
 					return err
 				}
 				if err := os.WriteFile("screenshot.png", screenshot, 0644); err != nil {
 					zap.S().Errorf("write screenshot")
 				}
-				zap.S().Debugf("html content: %s", htmlContent)
 				return nil
 			})); err != nil {
 				return err
