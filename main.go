@@ -265,21 +265,21 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 	return chromedp.Tasks{
 		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", grafanaURL, dashboardId, from, to, query)),
 		logAction("wait for dashboard loaded"),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			// check if need login
-			var currentLocation string
-			if err := chromedp.Run(ctx,
-				chromedp.WaitVisible(`body`),
-				chromedp.Location(&currentLocation),
-			); err != nil {
-				return err
-			}
-			locationBase := path.Base(currentLocation)
-			if locationBase == "login" {
-				return ErrDashboardNeedLogin
-			}
-			return nil
-		}),
+		// chromedp.ActionFunc(func(ctx context.Context) error {
+		// 	// check if need login
+		// 	var currentLocation string
+		// 	if err := chromedp.Run(ctx,
+		// 		chromedp.WaitVisible(`body`),
+		// 		chromedp.Location(&currentLocation),
+		// 	); err != nil {
+		// 		return err
+		// 	}
+		// 	locationBase := path.Base(currentLocation)
+		// 	if locationBase == "login" {
+		// 		return ErrDashboardNeedLogin
+		// 	}
+		// 	return nil
+		// }),
 		logAction("dashboard loaded, wait for panel loaded"),
 		chromedp.WaitVisible(`div[aria-label='Panel loading bar']`),    // wait for all panel loaded (for debug
 		chromedp.WaitNotPresent(`div[aria-label='Panel loading bar']`), // wait for all panel loaded
