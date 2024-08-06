@@ -250,6 +250,13 @@ func loginGrafanaTasks(grfanaURL, username, password string) chromedp.Tasks {
 	}
 }
 
+func logAction(msg string) chromedp.ActionFunc {
+	return func(ctx context.Context) error {
+		zap.S().Debug(msg)
+		return nil
+	}
+}
+
 func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, from, to int) chromedp.Tasks {
 	var multiBackspace string
 	for i := 0; i < 20; i++ {
@@ -257,6 +264,7 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 	}
 	return chromedp.Tasks{
 		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", grafanaURL, dashboardId, from, to, query)),
+		logAction("wait for dashboard loaded"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			// check if need login
 			var currentLocation string
@@ -272,11 +280,14 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 			}
 			return nil
 		}),
-		chromedp.WaitVisible(`div[aria-label='Panel loading bar']`),    // wait for all panel loaded (for debug
+		chromedp.WaitVisible(`div[aria-label='Panel loading bar']`), // wait for all panel loaded (for debug
+		logAction("wait for panel loaded"),
 		chromedp.WaitNotPresent(`div[aria-label='Panel loading bar']`), // wait for all panel loaded
+		logAction("all panel loaded"),
 		chromedp.Click(`button[aria-label='Share dashboard']`),
 		chromedp.Click(`button[aria-label='Tab Snapshot']`),
 		chromedp.WaitVisible(`#snapshot-name-input`),
+		logAction("click on snapshot name input"),
 		chromedp.Click(`#snapshot-name-input`, chromedp.ByID),
 		chromedp.KeyEvent(kb.End),
 		chromedp.KeyEvent(multiBackspace),
