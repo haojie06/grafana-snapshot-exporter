@@ -263,6 +263,7 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 		multiBackspace += kb.Backspace
 	}
 	return chromedp.Tasks{
+		chromedp.EmulateViewport(1920, 1080),
 		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", grafanaURL, dashboardId, from, to, query)),
 		logAction("wait for dashboard loaded"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -297,7 +298,7 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 			return nil
 		}),
 		logAction("dashboard loaded, wait for panel loaded"),
-		chromedp.WaitReady(`div[aria-label='Panel loading bar']`),      // wait for all panel loaded (for debug
+		// chromedp.WaitReady(`div[aria-label='Panel loading bar']`), // wait for all panel loaded (for debug
 		chromedp.WaitNotPresent(`div[aria-label='Panel loading bar']`), // wait for all panel loaded
 		logAction("all panel loaded"),
 		chromedp.Click(`button[aria-label='Share dashboard']`),
