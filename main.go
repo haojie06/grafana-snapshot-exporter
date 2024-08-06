@@ -269,9 +269,12 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 			var screenshot []byte
 			var htmlContent string
 			if err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-				chromedp.Sleep(5 * time.Second)
-				chromedp.OuterHTML("html", &htmlContent) // for debug
-				chromedp.FullScreenshot(&screenshot, 100)
+				if err := chromedp.Run(ctx,
+					chromedp.Sleep(5*time.Second),
+					chromedp.OuterHTML("html", &htmlContent),
+					chromedp.FullScreenshot(&screenshot, 100)); err != nil {
+					return err
+				}
 				if err := os.WriteFile("screenshot.png", screenshot, 0644); err != nil {
 					zap.S().Errorf("write screenshot")
 				}
