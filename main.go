@@ -265,7 +265,6 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 	return chromedp.Tasks{
 		chromedp.Navigate(fmt.Sprintf("%s/d/%s/?from=%d&to=%d&%s", grafanaURL, dashboardId, from, to, query)),
 		logAction("wait for dashboard loaded"),
-		logAction("wait for dashboard loaded"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var screenshot []byte
 			if err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
@@ -284,7 +283,9 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 			// check if need login
 			var currentLocation string
 			if err := chromedp.Run(ctx,
+				logAction("wait for body loaded"),
 				chromedp.WaitVisible(`body`),
+				logAction("get current location"),
 				chromedp.Location(&currentLocation),
 			); err != nil {
 				return err
