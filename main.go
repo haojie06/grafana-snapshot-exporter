@@ -241,7 +241,7 @@ func loginGrafanaTasks(grfanaURL, username, password string) chromedp.Tasks {
 				zap.S().Infof("already login, skip login")
 				return nil
 			}
-			return chromedp.Run(ctx, chromedp.WaitVisible(`input[name='user']`),
+			return chromedp.Run(ctx, chromedp.WaitReady(`input[name='user']`),
 				chromedp.SendKeys(`input[name='user']`, username),
 				chromedp.SendKeys(`input[name='password']`, password),
 				chromedp.Click(`button[type='submit']`),
@@ -297,12 +297,12 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 			return nil
 		}),
 		logAction("dashboard loaded, wait for panel loaded"),
-		chromedp.WaitVisible(`div[aria-label='Panel loading bar']`),    // wait for all panel loaded (for debug
+		chromedp.WaitReady(`div[aria-label='Panel loading bar']`),      // wait for all panel loaded (for debug
 		chromedp.WaitNotPresent(`div[aria-label='Panel loading bar']`), // wait for all panel loaded
 		logAction("all panel loaded"),
 		chromedp.Click(`button[aria-label='Share dashboard']`),
 		chromedp.Click(`button[aria-label='Tab Snapshot']`),
-		chromedp.WaitVisible(`#snapshot-name-input`),
+		chromedp.WaitReady(`#snapshot-name-input`),
 		logAction("click on snapshot name input"),
 		chromedp.Click(`#snapshot-name-input`, chromedp.ByID),
 		chromedp.KeyEvent(kb.End),
@@ -310,10 +310,12 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 		chromedp.KeyEvent(kb.Backspace),
 		chromedp.SendKeys(`#snapshot-name-input`, snapshotName),
 		chromedp.Click(`.css-1i88p6p`), // click on dropdown
-		chromedp.WaitVisible(`#react-select-2-listbox`),
+		logAction("click on dropdown"),
+		chromedp.WaitReady(`#react-select-2-listbox`),
 		chromedp.Click(`#react-select-2-option-1`), // choose 1 hour expire
 		chromedp.Click(`//button[span[text()='Local Snapshot']]`, chromedp.BySearch),
-		chromedp.WaitVisible(`#snapshot-url-input`),
+		logAction("click on local snapshot"),
+		chromedp.WaitReady(`#snapshot-url-input`),
 	}
 }
 
