@@ -286,6 +286,7 @@ func createSnapshotTasks(snapshotName, grafanaURL, dashboardId, query string, fr
 		logAction("dashboard loaded, wait for panel loaded"),
 		chromedp.WaitVisible(`div[aria-label='Panel loading bar']`),    // wait for all panel loaded
 		chromedp.WaitNotPresent(`div[aria-label='Panel loading bar']`), // wait for all panel loaded
+		chromedp.Sleep(5 * time.Second),
 		logAction("all panel loaded"),
 		chromedp.Click(`button[aria-label='Share dashboard']`),
 		chromedp.Click(`button[aria-label='Tab Snapshot']`),
